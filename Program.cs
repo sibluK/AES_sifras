@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 namespace AES_sifras
@@ -11,13 +9,10 @@ namespace AES_sifras
 
         public static string ReadFromFile(string fileName)
         {
-            string text;
-
             using (StreamReader reader = new StreamReader(fileName))
             {
-                text = reader.ReadToEnd();
+                return reader.ReadToEnd();
             }
-            return text;
         }
 
         public static void WriteToFile(string fileName, string text)
@@ -34,13 +29,10 @@ namespace AES_sifras
             {
                 aes.Key = raktas;
                 aes.Mode = mode;
-
-                if (mode == CipherMode.OFB)
-                    aes.Padding = PaddingMode.None;
-                else
-                    aes.Padding = PaddingMode.PKCS7;
+                aes.Padding = PaddingMode.PKCS7;
 
                 aes.GenerateIV();
+                byte[] iv = aes.IV;
 
                 /*
                 Console.WriteLine();
@@ -48,10 +40,7 @@ namespace AES_sifras
                 Console.WriteLine();
                 */
 
-                byte[] iv = aes.IV;
-
                 ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-
 
                 using (var msEncrypt = new MemoryStream())
                 {
@@ -73,11 +62,7 @@ namespace AES_sifras
             {
                 aes.Key = raktas;
                 aes.Mode = mode;
-
-                if (mode == CipherMode.OFB)
-                    aes.Padding = PaddingMode.None;
-                else
-                    aes.Padding = PaddingMode.PKCS7;
+                aes.Padding = PaddingMode.PKCS7;
 
                 byte[] iv = tekstas.Take(aes.BlockSize / 8).ToArray();
                 byte[] ciphertext = tekstas.Skip(aes.BlockSize / 8).ToArray();
@@ -157,14 +142,12 @@ namespace AES_sifras
             Console.WriteLine("Pasirinkite modą:");
             Console.WriteLine("1. Electronic Codebook Mode (ECB);");
             Console.WriteLine("2. Cipher Block Chaining Mode (CBC);");
-            Console.WriteLine("3. Output Feedback Mode (OFB); // NEVEIKIA SU AES");
-            Console.WriteLine("4. Cipher Feedback Mode (CFB);");
-            Console.WriteLine("5. Counter Mode (CTR); // NEVEIKIA, NERA BIBLIOTEKOS");
+            Console.WriteLine("3. Cipher Feedback Mode (CFB);");
             Console.WriteLine();
             Console.Write("Pasirinkimas: ");
             string pasirinkimas = Console.ReadLine();
 
-            while (pasirinkimas != "1" && pasirinkimas != "2" && pasirinkimas != "3" && pasirinkimas != "4" && pasirinkimas != "5")
+            while (pasirinkimas != "1" && pasirinkimas != "2" && pasirinkimas != "3")
             {
                 Console.Write("Netinkamas pasirinkimas. Pasirinkite kitą: ");
                 pasirinkimas = Console.ReadLine();
@@ -176,12 +159,8 @@ namespace AES_sifras
                     return CipherMode.ECB;
                 case "2":
                     return CipherMode.CBC;
-                case "3":
-                    return CipherMode.OFB; // NEVEIKIA SU AES
                 case "4":
                     return CipherMode.CFB;
-                case "5":
-                    return CipherMode.ECB; // NEVEIKIA, NERA BIBLIOTEKOS
                 default:
                     return CipherMode.ECB;
             }
@@ -205,7 +184,7 @@ namespace AES_sifras
                 byte[] tinkamasRaktas;
                 byte[] sifruotiBaitai;
                 string tekstas;
-                char rasymoPasirinkimas;
+                string rasymoPasirinkimas;
 
                 switch (pasirinkimas)
                 {
@@ -222,15 +201,15 @@ namespace AES_sifras
 
                         Console.WriteLine();
                         Console.Write("Ar norite įrašyti šifruotą tekstą į failą? (T/N): ");
-                        rasymoPasirinkimas = char.Parse(Console.ReadLine());
+                        rasymoPasirinkimas = Console.ReadLine();
 
-                        while (rasymoPasirinkimas != 'T' && rasymoPasirinkimas != 'N')
+                        while (rasymoPasirinkimas != "T" && rasymoPasirinkimas != "N")
                         {
                             Console.Write("Tokio pasirinkimo nėra! Įveskite tinkamą: ");
-                            rasymoPasirinkimas = char.Parse(Console.ReadLine());
+                            rasymoPasirinkimas = Console.ReadLine();
                         }
 
-                        if (rasymoPasirinkimas == 'T')
+                        if (rasymoPasirinkimas == "T")
                         {
                             WriteToFile(inputFile, Convert.ToBase64String(sifruotiBaitai));
                             Console.WriteLine();
@@ -238,10 +217,12 @@ namespace AES_sifras
                             Console.WriteLine();
                         }
                         else
+                        {
                             Console.WriteLine();
                             Console.WriteLine("----------------------------------------------------------");
                             Console.WriteLine($"Ivestas tekstas: {tekstas}");
                             Console.WriteLine($"Šifruotas tekstas: {Convert.ToBase64String(sifruotiBaitai)}");
+                        }
                         break;
 
                     case "2": // Desifravimas AES metodu
